@@ -1,8 +1,6 @@
-import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResonse";
 import { AuthService } from "./auth.service";
-import { date } from "zod";
 
 const signUp = catchAsync(async (req, res) => {
   const userData = req.body;
@@ -16,6 +14,19 @@ const signUp = catchAsync(async (req, res) => {
   });
 });
 
+const signIn = catchAsync(async (req, res) => {
+  const { user, accessToken } = await AuthService.createSignIn(req.body);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "User logged in successfully",
+    data: user,
+    token: accessToken,
+  });
+});
+
 export const AuthController = {
   signUp,
+  signIn,
 };

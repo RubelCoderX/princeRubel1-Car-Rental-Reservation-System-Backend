@@ -1,10 +1,13 @@
 import { model, Schema } from "mongoose";
-import { TUser } from "./user.interface";
+import { TUser, UserModel } from "./user.interface";
 import bcrypt from "bcrypt";
 import config from "../../config";
 
-const userSchema = new Schema<TUser>(
+const userSchema = new Schema<TUser, UserModel>(
   {
+    _id: {
+      type: String,
+    },
     name: {
       type: String,
       unique: true,
@@ -17,6 +20,7 @@ const userSchema = new Schema<TUser>(
     email: {
       type: String,
       required: [true, "Email is required"],
+      unique: true,
     },
     phone: {
       type: String,
@@ -54,4 +58,15 @@ userSchema.set("toJSON", {
     return ret;
   },
 });
-export const User = model<TUser>("User", userSchema);
+// Static method to check if a user exists by
+userSchema.statics.isUserExitsByEmail = async function (email: string) {
+  return await User.findOne({ email });
+};
+// Static method to check if the password matches
+userSchema.statics.isPasswordMatched = async function (
+  palinTextPassword,
+  hashedTextPassword
+) {
+  return await bcrypt.compare(palinTextPassword, hashedTextPassword);
+};
+export const User = model<TUser, UserModel>("User", userSchema);
