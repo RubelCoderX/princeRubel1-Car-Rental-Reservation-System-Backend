@@ -11,12 +11,11 @@ const createBooking = catchAsync(async (req, res) => {
   const { carId, date, startTime } = req.body;
 
   // checking if the user is authorized
-  if (!req.user || !req.user.userId) {
+  if (!req.user) {
     throw new AppError(httpStatus.UNAUTHORIZED, "User not authorized");
   }
-
-  const userId = req.user.userId;
-
+  const userEmail = req.user.email;
+  const userId = userEmail?._id;
   //checking if the car is exists
   const car = await Car.findById(carId);
   if (!car) {
@@ -28,7 +27,7 @@ const createBooking = catchAsync(async (req, res) => {
     date,
     startTime,
     car: car._id,
-    user: new mongoose.Types.ObjectId(userId.toString()),
+    user: new mongoose.Types.ObjectId(userId),
     email: req.user.userEmail,
   };
 

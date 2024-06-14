@@ -31,7 +31,6 @@ const createSignIn = async (payload: TSignInUser) => {
   }
   // create token send to the client
   const jwtPaylod = {
-    userId: user._id,
     userEmail: user.email,
     role: user.role,
   };
