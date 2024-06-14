@@ -7,19 +7,20 @@ import { USER_ROLE } from "../User/user.constant";
 
 const router = express.Router();
 
+router.put("/return", Auth(USER_ROLE.admin), CarControllers.returnCar);
 router.post(
-  "/cars",
+  "/",
   Auth(USER_ROLE.admin),
   validateRequest(CarValidation.carSchemaValidation),
   CarControllers.createCar
 );
-router.get("/cars", CarControllers.getAllCars);
-router.get("/cars/:id", CarControllers.getSingleCar);
+router.get("/", CarControllers.getAllCars);
+router.get("/:id", CarControllers.getSingleCar);
 router.put(
-  "/cars/:id",
+  "/:id",
   validateRequest(CarValidation.updateCarSchema),
   CarControllers.updateCar
 );
-router.delete("/cars/:id", CarControllers.deleteCar);
+router.delete("/:id", CarControllers.deleteCar);
 
 export const CarRoutes = router;

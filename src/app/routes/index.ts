@@ -7,15 +7,15 @@ const router = Router();
 
 const moduleRoute = [
   {
-    path: "/",
+    path: "/auth",
     route: AuthRouter,
   },
   {
-    path: "/",
+    path: "/cars",
     route: CarRoutes,
   },
   {
-    path: "/",
+    path: "/bookings",
     route: BookingRoutes,
   },
 ];

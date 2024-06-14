@@ -1,37 +1,9 @@
-import httpStatus from "http-status";
-import AppError from "../../error/AppError";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResonse";
-import { Car } from "../Car/car.model";
-import { TBooking } from "./booking.interface";
 import { BookingServices } from "./booking.service";
-import mongoose from "mongoose";
 
 const createBooking = catchAsync(async (req, res) => {
-  const { carId, date, startTime } = req.body;
-
-  // checking if the user is authorized
-  if (!req.user) {
-    throw new AppError(httpStatus.UNAUTHORIZED, "User not authorized");
-  }
-  const userEmail = req.user.email;
-  const userId = userEmail?._id;
-  //checking if the car is exists
-  const car = await Car.findById(carId);
-  if (!car) {
-    throw new AppError(httpStatus.NOT_FOUND, "Car is not found");
-  }
-
-  const bookingPayload: TBooking = {
-    carId,
-    date,
-    startTime,
-    car: car._id,
-    user: new mongoose.Types.ObjectId(userId),
-    email: req.user.userEmail,
-  };
-
-  const booking = await BookingServices.BookingCarFromDB(bookingPayload);
+  const booking = await BookingServices.BookingCarFromDB(req.body, req.user);
 
   sendResponse(res, {
     success: true,
@@ -56,7 +28,21 @@ const getAllBookings = catchAsync(async (req, res) => {
   });
 });
 
+const getMyBookings = catchAsync(async (req, res) => {
+  const userEmail = req.user?.userEmail;
+
+  // Call the service method to get bookings by user email
+  const result = await BookingServices.getMyBookingsFromDB(userEmail);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "My Bookings retrieved successfully",
+    data: result,
+  });
+});
+
 export const BookingControllers = {
   createBooking,
   getAllBookings,
+  getMyBookings,
 };

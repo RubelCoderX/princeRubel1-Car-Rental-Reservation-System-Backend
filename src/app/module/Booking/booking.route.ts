@@ -8,15 +8,16 @@ import { USER_ROLE } from "../User/user.constant";
 const router = express.Router();
 
 router.post(
-  "/bookings",
+  "/",
   Auth(USER_ROLE.user),
   validateRequest(BookingValidation.BookingValidationSchema),
   BookingControllers.createBooking
 );
+router.get("/", Auth(USER_ROLE.admin), BookingControllers.getAllBookings);
 router.get(
-  "/bookings",
-  Auth(USER_ROLE.admin),
-  BookingControllers.getAllBookings
+  "/my-bookings",
+  Auth(USER_ROLE.user),
+  BookingControllers.getMyBookings
 );
 
 export const BookingRoutes = router;

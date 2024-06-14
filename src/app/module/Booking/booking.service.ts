@@ -2,54 +2,81 @@ import httpStatus from "http-status";
 import AppError from "../../error/AppError";
 import { Car } from "../Car/car.model";
 import { Booking } from "./booking.model";
-import { TBooking } from "./booking.interface";
 import { User } from "../User/user.model";
+import { JwtPayload } from "jsonwebtoken";
+import mongoose, { startSession } from "mongoose";
 
-const BookingCarFromDB = async (payload: TBooking) => {
-  const { car: carId, date, startTime, user: userId, email } = payload;
+const BookingCarFromDB = async (
+  payload: Record<string, unknown>,
+  userData: JwtPayload
+) => {
+  const userInformation = await User.findOne({ email: userData.userEmail });
 
-  const car = await Car.findById(carId);
-  // check if the car is exists
-  if (!car) {
-    throw new AppError(httpStatus.NOT_FOUND, `Car with ID ${carId} not found`);
+  if (!userInformation) {
+    throw new AppError(httpStatus.NOT_FOUND, " User not found!!");
   }
 
-  if (car.status !== "available") {
+  const carData = await Car.findById(payload.carId);
+
+  // check if the car is exists
+  if (!carData) {
+    throw new AppError(httpStatus.NOT_FOUND, "Car not found!!");
+  }
+
+  if (carData.status !== "available") {
     throw new AppError(httpStatus.BAD_REQUEST, "Car booking is not available");
   }
-  // check if the user is exists
-  const user = await User.findOne({ email });
+  payload.user = userInformation._id;
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
 
-  if (!user) {
-    throw new AppError(
-      httpStatus.NOT_FOUND,
-      `User with ID ${userId} not found`
-    );
+    carData.status = "unavailable";
+    await Car.create([carData], { session });
+    // Save the booking to the database
+    const bookingData = await Booking.create([payload], { session });
+    const result = bookingData[0];
+    await (await result.populate("user")).populate("carId");
+
+    await session.commitTransaction();
+    await session.endSession();
+    return result;
+  } catch (error: any) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw new Error(error);
   }
+};
+const getAllBookingsFromDB = async (carId: string, date: string) => {
+  const query: any = {};
 
-  // Create a new booking instance
-  const newBooking = new Booking({
-    carId,
-    date,
-    car,
-    user,
-    startTime,
-    endTime: null,
-    totalCost: 0,
-  });
-
-  // Save the booking to the database
-  const result = await newBooking.save();
+  if (carId) {
+    query.carId = carId;
+  }
+  if (date) {
+    query.date = date;
+  }
+  const result = await Booking.find(query).populate("user").populate("carId");
 
   return result;
 };
-const getAllBookingsFromDB = async (carId: string, date: string) => {
-  const result = await Booking.find().populate("user").populate("car");
 
-  return result;
+const getMyBookingsFromDB = async (email: string) => {
+  const user = await User.findOne({ email });
+
+  if (!user?._id) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const bookings = await Booking.find({ user: user?._id })
+    .populate("user")
+    .populate("carId");
+
+  return bookings;
 };
 
 export const BookingServices = {
   BookingCarFromDB,
   getAllBookingsFromDB,
+  getMyBookingsFromDB,
 };
