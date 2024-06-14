@@ -4,6 +4,7 @@ import { Car } from "../Car/car.model";
 import { Booking } from "./booking.model";
 import { TBooking } from "./booking.interface";
 import { User } from "../User/user.model";
+import mongoose from "mongoose";
 
 const BookingCarFromDB = async (payload: TBooking) => {
   const { car: carId, date, startTime, user: userId, email } = payload;
@@ -40,9 +41,17 @@ const BookingCarFromDB = async (payload: TBooking) => {
 
   // Save the booking to the database
   const result = await newBooking.save();
+
+  return result;
+};
+const getAllBookingsFromDB = async (carId: string, date: string) => {
+  const result = await Booking.find().populate("user").populate("car");
+  console.log(result);
+
   return result;
 };
 
 export const BookingServices = {
   BookingCarFromDB,
+  getAllBookingsFromDB,
 };

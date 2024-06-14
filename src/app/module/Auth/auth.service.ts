@@ -8,7 +8,6 @@ import config from "../../config";
 
 const createSignUp = async (userData: TUser) => {
   // checking if the user already exists
-
   const existingUser = await User.findOne({ email: userData.email });
   if (existingUser) {
     throw new AppError(httpStatus.NOT_FOUND, "User already Exists!!");
@@ -20,7 +19,7 @@ const createSignUp = async (userData: TUser) => {
 
 const createSignIn = async (payload: TSignInUser) => {
   const user = await User.isUserExitsByEmail(payload.email);
-  // console.log(user);
+
   // checking if the user not found
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User not Found");
@@ -36,7 +35,6 @@ const createSignIn = async (payload: TSignInUser) => {
     userEmail: user.email,
     role: user.role,
   };
-  // console.log(jwtPaylod);
 
   const accessToken = jwt.sign(jwtPaylod, config.jwt_access_secret as string, {
     expiresIn: "10d",

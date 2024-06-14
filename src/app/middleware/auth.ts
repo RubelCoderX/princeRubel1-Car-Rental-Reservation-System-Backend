@@ -10,7 +10,7 @@ const Auth = (requiredRole: TUserRole) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     // check if the token send client
-    //
+
     if (!authHeader) {
       throw new AppError(httpStatus.UNAUTHORIZED, "You are not Authorized!!");
     }
@@ -29,12 +29,6 @@ const Auth = (requiredRole: TUserRole) => {
           );
         }
         const user = decoded as JwtPayload;
-        if (!user.userId) {
-          throw new AppError(
-            httpStatus.BAD_REQUEST,
-            "User ID not found in token"
-          );
-        }
 
         if (requiredRole && user.role !== requiredRole) {
           throw new AppError(
@@ -44,9 +38,7 @@ const Auth = (requiredRole: TUserRole) => {
         }
 
         //decoded
-        // console.log(decoded);
         req.user = user;
-
         next();
       }
     );
