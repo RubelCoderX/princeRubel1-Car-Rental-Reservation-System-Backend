@@ -7,12 +7,12 @@ import { AuthValidation } from "./auth.validation";
 const router = express.Router();
 
 router.post(
-  "/singup",
+  "/signup",
   validateRequest(UserValidation.userValidationSchema),
   AuthController.signUp
 );
 router.post(
-  "/singin",
+  "/signin",
   validateRequest(AuthValidation.singInValidationSchema),
   AuthController.signIn
 );

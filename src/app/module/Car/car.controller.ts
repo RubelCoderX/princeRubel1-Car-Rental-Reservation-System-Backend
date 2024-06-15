@@ -1,3 +1,4 @@
+import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResonse";
 import { CarServices } from "./car.service";
@@ -15,12 +16,19 @@ const createCar = catchAsync(async (req, res) => {
 const getAllCars = catchAsync(async (req, res) => {
   const result = await CarServices.getAllCarsFromDB();
 
-  sendResponse(res, {
-    success: true,
-    statusCode: 200,
-    message: "Cars retrieved successfully",
-    data: result,
-  });
+  result.length < 1
+    ? sendResponse(res, {
+        success: true,
+        statusCode: httpStatus.NOT_FOUND,
+        message: "Data No Found",
+        data: result,
+      })
+    : sendResponse(res, {
+        success: true,
+        statusCode: 200,
+        message: "Cars retrieved successfully",
+        data: result,
+      });
 });
 
 const getSingleCar = catchAsync(async (req, res) => {

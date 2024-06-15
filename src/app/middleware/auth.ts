@@ -32,8 +32,8 @@ const Auth = (requiredRole: TUserRole) => {
 
         if (requiredRole && user.role !== requiredRole) {
           throw new AppError(
-            httpStatus.FORBIDDEN,
-            "You do not have access to this resource!!"
+            httpStatus.UNAUTHORIZED,
+            "You have no access to this route!!"
           );
         }
 

@@ -4,7 +4,7 @@ import { Car } from "../Car/car.model";
 import { Booking } from "./booking.model";
 import { User } from "../User/user.model";
 import { JwtPayload } from "jsonwebtoken";
-import mongoose, { startSession } from "mongoose";
+import mongoose from "mongoose";
 
 const BookingCarFromDB = async (
   payload: Record<string, unknown>,
@@ -15,6 +15,7 @@ const BookingCarFromDB = async (
   if (!userInformation) {
     throw new AppError(httpStatus.NOT_FOUND, " User not found!!");
   }
+  payload.car = payload.carId;
 
   const carData = await Car.findById(payload.carId);
 
@@ -36,7 +37,7 @@ const BookingCarFromDB = async (
     // Save the booking to the database
     const bookingData = await Booking.create([payload], { session });
     const result = bookingData[0];
-    await (await result.populate("user")).populate("carId");
+    await (await result.populate("user")).populate("car");
 
     await session.commitTransaction();
     await session.endSession();
@@ -47,16 +48,21 @@ const BookingCarFromDB = async (
     throw new Error(error);
   }
 };
-const getAllBookingsFromDB = async (carId: string, date: string) => {
-  const query: any = {};
+const getAllBookingsFromDB = async (query: Record<string, unknown>) => {
+  const { carId, date } = query;
+
+  const filter: any = {};
 
   if (carId) {
-    query.carId = carId;
+    filter.car = carId;
   }
+
   if (date) {
-    query.date = date;
+    filter.date = date;
   }
-  const result = await Booking.find(query).populate("user").populate("carId");
+  // console.log(filter);
+  const result = await Booking.find(filter).populate("car").populate("user");
+  console.log(result);
 
   return result;
 };
@@ -70,7 +76,7 @@ const getMyBookingsFromDB = async (email: string) => {
 
   const bookings = await Booking.find({ user: user?._id })
     .populate("user")
-    .populate("carId");
+    .populate("car");
 
   return bookings;
 };
