@@ -40,7 +40,7 @@ const createSignIn = async (payload: TSignInUser) => {
   });
   return {
     user,
-    accessToken: `Bearer ${accessToken}`,
+    accessToken: accessToken,
   };
 };
 

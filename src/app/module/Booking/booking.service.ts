@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from "http-status";
 import AppError from "../../error/AppError";
 import { Car } from "../Car/car.model";
@@ -62,7 +63,7 @@ const getAllBookingsFromDB = async (query: Record<string, unknown>) => {
   }
   // console.log(filter);
   const result = await Booking.find(filter).populate("car").populate("user");
-  console.log(result);
+  // console.log(result);
 
   return result;
 };

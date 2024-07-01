@@ -7,8 +7,8 @@ const http_status_1 = __importDefault(require("http-status"));
 const notFound = (req, res, next) => {
     res.status(http_status_1.default.NOT_FOUND).json({
         success: false,
+        statusCode: 404,
         message: " Not Found!!",
-        error: "",
     });
 };
 exports.default = notFound;

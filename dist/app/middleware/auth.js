@@ -32,7 +32,12 @@ const Auth = (requiredRole) => {
             }
             const user = decoded;
             if (requiredRole && user.role !== requiredRole) {
-                throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "You have no access to this route!!");
+                res.status(http_status_1.default.UNAUTHORIZED).json({
+                    success: false,
+                    statusCode: http_status_1.default.UNAUTHORIZED,
+                    message: "You have no access to this route",
+                });
+                return;
             }
             //decoded
             req.user = user;
