@@ -25,7 +25,7 @@ const Auth = (requiredRole: TUserRole) => {
         if (err) {
           throw new AppError(
             httpStatus.UNAUTHORIZED,
-            "You are not Authorized!!"
+            "You are not Authorized!!two"
           );
         }
         const user = decoded as JwtPayload;

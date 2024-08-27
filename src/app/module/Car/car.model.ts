@@ -35,6 +35,18 @@ const carSchema = new Schema<TCar>(
       type: String,
       default: "available",
     },
+    carImgUrl: {
+      type: [String],
+      required: [true, "Car imgUrl is required"],
+    },
+    vehicleSpecification: {
+      type: [String],
+      required: [true, "Vehicle Specification is required"],
+    },
+    maxSeats: {
+      type: Number,
+      required: [true, "Max Seats is required"],
+    },
   },
   {
     timestamps: true,

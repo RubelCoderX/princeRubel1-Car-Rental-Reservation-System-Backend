@@ -7,4 +7,7 @@ export type TCar = {
   isDelete: boolean;
   pricePerHour: number;
   status: string;
+  carImgUrl: string[];
+  vehicleSpecification: string[];
+  maxSeats: number;
 };

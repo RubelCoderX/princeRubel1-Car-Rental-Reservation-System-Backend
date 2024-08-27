@@ -14,10 +14,15 @@ const userSchema = new Schema<TUser, UserModel>(
       type: String,
       required: [true, "Password is required"],
     },
+
     email: {
       type: String,
       required: [true, "Email is required"],
       unique: true,
+    },
+    image: {
+      type: String,
+      required: [true, "Image is required"],
     },
     phone: {
       type: String,
@@ -26,10 +31,11 @@ const userSchema = new Schema<TUser, UserModel>(
     role: {
       type: String,
       enum: ["user", "admin"],
+      default: "user",
     },
     address: {
       type: String,
-      required: [true, "Address is required"],
+      // required: [true, "Address is required"],
     },
   },
   {
@@ -38,10 +44,22 @@ const userSchema = new Schema<TUser, UserModel>(
 );
 userSchema.pre("save", async function (next) {
   const user = this;
-  user.password = await bcrypt.hash(
-    user.password,
-    Number(config.bcrypt_salt_rounds)
-  );
+
+  // Validate that password and confirmPassword match
+  if (user.isModified("password") && user.confirmPassword) {
+    if (user.password !== user.confirmPassword) {
+      throw new Error("Passwords do not match");
+    }
+  }
+
+  // Hash the password if it has been modified (or is new)
+  if (user.isModified("password")) {
+    user.password = await bcrypt.hash(
+      user.password,
+      Number(config.bcrypt_salt_rounds)
+    );
+  }
+
   next();
 });
 // set '' after saving password

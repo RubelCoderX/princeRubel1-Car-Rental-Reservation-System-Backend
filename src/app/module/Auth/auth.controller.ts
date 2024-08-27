@@ -1,9 +1,11 @@
+import config from "../../config";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResonse";
 import { AuthService } from "./auth.service";
 
 const signUp = catchAsync(async (req, res) => {
   const userData = req.body;
+
   const result = await AuthService.createSignUp(userData);
 
   sendResponse(res, {
@@ -15,7 +17,14 @@ const signUp = catchAsync(async (req, res) => {
 });
 
 const signIn = catchAsync(async (req, res) => {
-  const { user, accessToken } = await AuthService.createSignIn(req.body);
+  const { user, accessToken, refreshToken } = await AuthService.createSignIn(
+    req.body
+  );
+
+  res.cookie("refreshToken", refreshToken, {
+    secure: config.NODE_ENV === "production" ? true : false,
+    httpOnly: true,
+  });
 
   sendResponse(res, {
     success: true,
@@ -26,7 +35,19 @@ const signIn = catchAsync(async (req, res) => {
   });
 });
 
+const refreshTokenFromDB = catchAsync(async (req, res) => {
+  const { refreshToken } = req.cookies;
+  const result = await AuthService.refreshTokenIntoDB(refreshToken);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "Token refreshed successfully",
+    data: result,
+  });
+});
 export const AuthController = {
   signUp,
   signIn,
+  refreshTokenFromDB,
 };

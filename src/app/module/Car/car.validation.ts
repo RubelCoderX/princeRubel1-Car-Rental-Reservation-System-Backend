@@ -15,6 +15,7 @@ const carSchemaValidation = z.object({
       .number()
       .positive("PricePerHour is required and must be positive"),
     status: z.enum(["available", "unavailable"]).optional(),
+    carImgUrl: z.string().min(1, { message: "Car Image URL must be required" }),
   }),
 });
 
