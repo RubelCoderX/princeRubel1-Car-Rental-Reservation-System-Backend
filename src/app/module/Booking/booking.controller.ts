@@ -54,8 +54,54 @@ const getMyBookings = catchAsync(async (req, res) => {
       });
 });
 
+const updateBooking = catchAsync(async (req, res) => {
+  const user = req.user;
+  const data = req.body;
+  const { bookingId } = req.params;
+
+  const result = await BookingServices.updateBookeingFromDB(
+    user,
+    data,
+    bookingId
+  );
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Booking updated successfully!",
+    data: result,
+  });
+});
+
+const deletedBooking = catchAsync(async (req, res) => {
+  const user = req.user;
+
+  const { bookingId } = req.params;
+  const result = await BookingServices.deleteBookingFromDB(user, bookingId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Booking deleted successfully!",
+    data: result,
+  });
+});
+const updateBookingStatusFromDB = catchAsync(async (req, res) => {
+  const user = req.user;
+  const { bookingId } = req.params;
+
+  const result = await BookingServices.updateBookingStatus(user, bookingId);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Booking status updated successfully!",
+    data: result,
+  });
+});
 export const BookingControllers = {
   createBooking,
   getAllBookings,
   getMyBookings,
+  updateBooking,
+  deletedBooking,
+  updateBookingStatusFromDB,
 };

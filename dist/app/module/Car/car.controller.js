@@ -27,7 +27,8 @@ const createCar = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void
     });
 }));
 const getAllCars = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield car_service_1.CarServices.getAllCarsFromDB();
+    const { name, carType, location, price } = req.query;
+    const result = yield car_service_1.CarServices.getAllCarsFromDB(name, carType, location, parseInt(price));
     result.length < 1
         ? (0, sendResonse_1.default)(res, {
             success: true,
@@ -82,6 +83,17 @@ const returnCar = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void
         data: result,
     });
 }));
+// search car
+const searchCars = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    // console.log(req.body);
+    const result = yield car_service_1.CarServices.searchCarsFromDB(req.body);
+    (0, sendResonse_1.default)(res, {
+        statusCode: http_status_1.default.OK,
+        success: true,
+        message: "Cars searched successfully!",
+        data: result,
+    });
+}));
 exports.CarControllers = {
     createCar,
     getAllCars,
@@ -89,4 +101,5 @@ exports.CarControllers = {
     updateCar,
     deleteCar,
     returnCar,
+    searchCars,
 };

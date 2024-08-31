@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from "http-status";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResonse";
@@ -14,8 +15,14 @@ const createCar = catchAsync(async (req, res) => {
   });
 });
 const getAllCars = catchAsync(async (req, res) => {
-  const result = await CarServices.getAllCarsFromDB();
+  const { name, carType, location, price } = req.query;
 
+  const result = await CarServices.getAllCarsFromDB(
+    name as string,
+    carType as string,
+    location as string,
+    parseInt(price as string)
+  );
   result.length < 1
     ? sendResponse(res, {
         success: true,
@@ -76,6 +83,25 @@ const returnCar = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+// search car
+const searchCars = catchAsync(async (req, res) => {
+  const { features, seats, carType } = req.query as any;
+
+  const result = await CarServices.searchCarsFromDB({
+    features,
+    carType,
+    seats,
+  });
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Cars searched successfully!",
+    data: result,
+  });
+});
+
 export const CarControllers = {
   createCar,
   getAllCars,
@@ -83,4 +109,5 @@ export const CarControllers = {
   updateCar,
   deleteCar,
   returnCar,
+  searchCars,
 };

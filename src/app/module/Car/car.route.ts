@@ -7,6 +7,12 @@ import { USER_ROLE } from "../User/user.constant";
 
 const router = express.Router();
 
+// search cars
+router.get(
+  "/search-cars",
+  Auth(USER_ROLE.user, USER_ROLE.admin),
+  CarControllers.searchCars
+);
 router.put("/return", Auth(USER_ROLE.admin), CarControllers.returnCar);
 router.post(
   "/",
@@ -21,6 +27,7 @@ router.put(
   validateRequest(CarValidation.updateCarSchema),
   CarControllers.updateCar
 );
+
 router.delete("/:id", CarControllers.deleteCar);
 
 export const CarRoutes = router;

@@ -12,7 +12,16 @@ const userValidationSchema = z.object({
     address: z.string().optional(),
   }),
 });
+const userUpdateValidationSchema = z.object({
+  body: z.object({
+    name: z.string().optional(),
+    email: z.string().optional(),
+    phone: z.string().optional(),
+    image: z.string().optional(),
+  }),
+});
 
 export const UserValidation = {
   userValidationSchema,
+  userUpdateValidationSchema,
 };

@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CarServices = void 0;
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const http_status_1 = __importDefault(require("http-status"));
 const AppError_1 = __importDefault(require("../../error/AppError"));
 const car_model_1 = require("./car.model");
@@ -22,8 +23,32 @@ const createCarIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function*
     const result = yield car_model_1.Car.create(payload);
     return result;
 });
-const getAllCarsFromDB = () => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield car_model_1.Car.find();
+const getAllCarsFromDB = (name, carType, location, price) => __awaiter(void 0, void 0, void 0, function* () {
+    let query = {
+        isDelete: { $ne: true },
+    };
+    if (name) {
+        const searchRegex = new RegExp(name, "i");
+        query = {
+            $or: [{ name: searchRegex }],
+        };
+    }
+    if (carType) {
+        const searchRegex = new RegExp(carType, "i");
+        query = {
+            $or: [{ carType: searchRegex }],
+        };
+    }
+    if (location) {
+        const searchRegex = new RegExp(location, "i");
+        query = {
+            $or: [{ location: searchRegex }],
+        };
+    }
+    if (price > 0) {
+        query.pricePerHour = { $lte: price };
+    }
+    const result = yield car_model_1.Car.find(query);
     return result;
 });
 const getSingleCarFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
@@ -81,6 +106,21 @@ const returnCarIntoDB = (bookingId, endTime) => __awaiter(void 0, void 0, void 0
         throw new Error(error);
     }
 });
+// search car
+const searchCarsFromDB = (_a) => __awaiter(void 0, [_a], void 0, function* ({ features, carType, seats, }) {
+    const query = { status: "available" };
+    if (carType) {
+        query.carType = carType;
+    }
+    if (seats) {
+        query.maxSeats = seats;
+    }
+    if (features) {
+        query.features = { $in: [features] };
+    }
+    const result = yield car_model_1.Car.find(query);
+    return result;
+});
 exports.CarServices = {
     createCarIntoDB,
     getAllCarsFromDB,
@@ -88,4 +128,5 @@ exports.CarServices = {
     updateCarIntoDB,
     deleteCarFromDB,
     returnCarIntoDB,
+    searchCarsFromDB,
 };

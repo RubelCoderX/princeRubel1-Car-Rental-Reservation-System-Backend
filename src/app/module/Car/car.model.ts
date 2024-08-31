@@ -21,7 +21,7 @@ const carSchema = new Schema<TCar>(
     },
     features: {
       type: [String],
-      required: [true, "Features is required"],
+      required: [true, "Features are required"],
     },
     isDelete: {
       type: Boolean,
@@ -29,23 +29,44 @@ const carSchema = new Schema<TCar>(
     },
     pricePerHour: {
       type: Number,
-      required: [true, "PricePerHour is required"],
+      required: [true, "Price per hour is required"],
     },
     status: {
       type: String,
+      enum: ["available", "unavailable"],
       default: "available",
     },
     carImgUrl: {
       type: [String],
-      required: [true, "Car imgUrl is required"],
+      required: [true, "Car image URL is required"],
     },
     vehicleSpecification: {
       type: [String],
-      required: [true, "Vehicle Specification is required"],
+      required: [true, "Vehicle specifications are required"],
     },
     maxSeats: {
       type: Number,
-      required: [true, "Max Seats is required"],
+      required: [true, "Max seats are required"],
+    },
+    ratings: {
+      type: Number,
+      default: 0,
+    },
+    gearType: {
+      type: String,
+      required: [true, "Gear type is required"],
+    },
+    fuelType: {
+      type: String,
+      required: [true, "Fuel type is required"],
+    },
+    carType: {
+      type: String,
+      required: [true, "Car type is required"],
+    },
+    location: {
+      type: String,
+      required: [true, "Location is required"],
     },
   },
   {

@@ -2,13 +2,14 @@ import { z } from "zod";
 
 const BookingValidationSchema = z.object({
   body: z.object({
-    carId: z.string(),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, {
-      message: "Date must be in the format YYYY-MM-DD",
-    }),
-    startTime: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, {
-      message: "Start time must be in the format HH:MM in 24-hour format",
-    }),
+    user: z.string({ required_error: "User is required" }),
+    car: z.string({ required_error: "Car is required" }),
+    totalCost: z.number().nonnegative().default(0),
+    status: z.enum(["pending", "ongoing", "complete"]).default("pending"),
+    identity: z.string().nonempty("Identity is required"),
+    identityNo: z.string().nonempty("Identity number is required"),
+    drivingLicenseNo: z.string().nonempty("Driving license number is required"),
+    isDeleted: z.boolean().default(false),
   }),
 });
 

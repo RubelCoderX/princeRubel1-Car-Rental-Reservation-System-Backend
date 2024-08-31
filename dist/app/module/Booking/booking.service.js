@@ -13,19 +13,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BookingServices = void 0;
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const http_status_1 = __importDefault(require("http-status"));
 const AppError_1 = __importDefault(require("../../error/AppError"));
 const car_model_1 = require("../Car/car.model");
 const booking_model_1 = require("./booking.model");
 const user_model_1 = require("../User/user.model");
 const mongoose_1 = __importDefault(require("mongoose"));
-const BookingCarFromDB = (payload, userData) => __awaiter(void 0, void 0, void 0, function* () {
-    const userInformation = yield user_model_1.User.findOne({ email: userData.userEmail });
-    if (!userInformation) {
+const BookingCarFromDB = (payload, user) => __awaiter(void 0, void 0, void 0, function* () {
+    const userData = yield user_model_1.User.findOne({ email: user.userEmail });
+    if (!userData) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, " User not found!!");
     }
-    payload.car = payload.carId;
-    const carData = yield car_model_1.Car.findById(payload.carId);
+    // payload.car = payload.carId;
+    payload.user = userData._id;
+    const carData = yield car_model_1.Car.findById(payload === null || payload === void 0 ? void 0 : payload.car);
     // check if the car is exists
     if (!carData) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Car not found!!");
@@ -33,7 +35,7 @@ const BookingCarFromDB = (payload, userData) => __awaiter(void 0, void 0, void 0
     if (carData.status !== "available") {
         throw new AppError_1.default(http_status_1.default.BAD_REQUEST, "Car booking is not available");
     }
-    payload.user = userInformation._id;
+    payload.user = userData._id;
     const session = yield mongoose_1.default.startSession();
     try {
         session.startTransaction();
@@ -64,7 +66,7 @@ const getAllBookingsFromDB = (query) => __awaiter(void 0, void 0, void 0, functi
     }
     // console.log(filter);
     const result = yield booking_model_1.Booking.find(filter).populate("car").populate("user");
-    console.log(result);
+    // console.log(result);
     return result;
 });
 const getMyBookingsFromDB = (email) => __awaiter(void 0, void 0, void 0, function* () {
@@ -77,6 +79,7 @@ const getMyBookingsFromDB = (email) => __awaiter(void 0, void 0, void 0, functio
         .populate("car");
     return bookings;
 });
+const deleteBookingFromDB = (bookingId) => __awaiter(void 0, void 0, void 0, function* () { });
 exports.BookingServices = {
     BookingCarFromDB,
     getAllBookingsFromDB,

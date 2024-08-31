@@ -1,3 +1,4 @@
+import httpStatus from "http-status";
 import config from "../../config";
 import catchAsync from "../../utils/catchAsync";
 import sendResponse from "../../utils/sendResonse";
@@ -46,8 +47,65 @@ const refreshTokenFromDB = catchAsync(async (req, res) => {
     data: result,
   });
 });
+
+const getAllUserFromDB = catchAsync(async (req, res) => {
+  const result = await AuthService.getAllUserInDB();
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "User is retrived successfully",
+    data: result,
+  });
+});
+const updateUserFromDB = catchAsync(async (req, res) => {
+  const { userEmail } = req.user;
+
+  const result = await AuthService.updateUserIntoDB(userEmail, req.body);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "User updated successfully",
+    data: result,
+  });
+});
+const getMeFromDB = catchAsync(async (req, res) => {
+  const { userId } = req.user;
+  const result = await AuthService.getMeIntoDB(userId);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "User retrived successfully",
+    data: result,
+  });
+});
+const deleteFromDB = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  const result = await AuthService.delelteUserIntoDB(userId);
+  sendResponse(res, {
+    success: true,
+    statusCode: 200,
+    message: "User deleted successfully",
+    data: result,
+  });
+});
+
+const makeAdmin = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+  const result = await AuthService.makeAdminIntoDB(userId);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "User role updated successfully!",
+    data: result,
+  });
+});
 export const AuthController = {
   signUp,
   signIn,
   refreshTokenFromDB,
+  updateUserFromDB,
+  getAllUserFromDB,
+  getMeFromDB,
+  deleteFromDB,
+  makeAdmin,
 };

@@ -3,34 +3,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Booking = void 0;
 const mongoose_1 = require("mongoose");
 const bookingSchema = new mongoose_1.Schema({
-    date: {
+    user: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
+    car: { type: mongoose_1.Schema.Types.ObjectId, ref: "Car", required: true },
+    totalCost: { type: Number, default: 0 },
+    isCanceled: { type: Boolean, default: false },
+    status: {
         type: String,
-        required: [true, "Date is required"],
+        enum: ["pending", "ongoing", "complete"],
+        default: "pending",
     },
-    startTime: {
-        type: String,
-        required: [true, "Start Time is required"],
-    },
-    endTime: {
-        type: String,
-        default: null,
-    },
-    user: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: "User",
-    },
-    car: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: "Car",
-        required: [true, "Car is required"],
-    },
-    totalCost: {
-        type: Number,
-        default: 0,
-    },
-    email: {
-        type: String,
-    },
+    identity: { type: String, required: true },
+    identityNo: { type: String, required: true },
+    drivingLicenseNo: { type: String, required: true },
 }, {
     timestamps: true,
 });

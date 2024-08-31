@@ -22,7 +22,6 @@ const userSchema = new Schema<TUser, UserModel>(
     },
     image: {
       type: String,
-      required: [true, "Image is required"],
     },
     phone: {
       type: String,
@@ -33,6 +32,10 @@ const userSchema = new Schema<TUser, UserModel>(
       enum: ["user", "admin"],
       default: "user",
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
     address: {
       type: String,
       // required: [true, "Address is required"],
@@ -42,36 +45,15 @@ const userSchema = new Schema<TUser, UserModel>(
     timestamps: true,
   }
 );
+
+// hashed the password field
 userSchema.pre("save", async function (next) {
-  const user = this;
-
-  // Validate that password and confirmPassword match
-  if (user.isModified("password") && user.confirmPassword) {
-    if (user.password !== user.confirmPassword) {
-      throw new Error("Passwords do not match");
-    }
-  }
-
-  // Hash the password if it has been modified (or is new)
-  if (user.isModified("password")) {
-    user.password = await bcrypt.hash(
-      user.password,
-      Number(config.bcrypt_salt_rounds)
-    );
-  }
+  this.password = await bcrypt.hash(
+    this.password,
+    Number(config.bcrypt_salt_rounds)
+  );
 
   next();
-});
-// set '' after saving password
-userSchema.post("save", async function (doc, next) {
-  doc.password = "";
-  next();
-});
-userSchema.set("toJSON", {
-  transform: function (doc, ret) {
-    delete ret.password;
-    return ret;
-  },
 });
 // Static method to check if a user exists by
 userSchema.statics.isUserExitsByEmail = async function (email: string) {

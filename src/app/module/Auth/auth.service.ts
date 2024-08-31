@@ -7,15 +7,25 @@ import jwt from "jsonwebtoken";
 import config from "../../config";
 import { verifyToken } from "./auth.constant";
 
-const createSignUp = async (userData: TUser) => {
-  // checking if the user already exists
-  const existingUser = await User.findOne({ email: userData.email });
+const createSignUp = async (payload: TUser) => {
+  // Checking if the user already exists
+  const existingUser = await User.findOne({ email: payload.email });
   if (existingUser) {
-    throw new AppError(httpStatus.NOT_FOUND, "User already Exists!!");
+    throw new AppError(httpStatus.CONFLICT, "User already exists!!");
   }
-  const newUser = new User(userData);
-  const result = await newUser.save();
-  return result;
+
+  // Create new user object
+  const newUser = new User(payload);
+
+  // Handling image upload
+  // const imageName = `${newUser._id}${payload.name}`;
+  // const path = file?.path;
+  // const { secure_url } = await sendImageToCloudinary(imageName, path);
+  //   newUser.image = secure_url;
+
+  await newUser.save();
+
+  return newUser;
 };
 
 const createSignIn = async (payload: TSignInUser) => {
@@ -32,6 +42,7 @@ const createSignIn = async (payload: TSignInUser) => {
   }
   // create token send to the client
   const jwtPaylod = {
+    userId: user?._id,
     userEmail: user.email,
     name: user.name,
     image: user.image,
@@ -39,7 +50,7 @@ const createSignIn = async (payload: TSignInUser) => {
   };
 
   const accessToken = jwt.sign(jwtPaylod, config.jwt_access_secret as string, {
-    expiresIn: "5m",
+    expiresIn: "10m",
   });
   const refreshToken = jwt.sign(
     jwtPaylod,
@@ -54,6 +65,10 @@ const createSignIn = async (payload: TSignInUser) => {
     accessToken: accessToken,
   };
 };
+const getAllUserInDB = async () => {
+  const result = await User.find();
+  return result;
+};
 const refreshTokenIntoDB = async (token: string) => {
   // check if the token is valid
   const decoded = verifyToken(token, config.jwt_refresh_secret as string);
@@ -64,20 +79,74 @@ const refreshTokenIntoDB = async (token: string) => {
     throw new AppError(httpStatus.NOT_FOUND, "User not found!!");
   }
   const jwtPayload = {
+    userId: user._id,
     userEmail: user.email,
     name: user.name,
     image: user.image,
     role: user.role,
   };
   const accessToken = jwt.sign(jwtPayload, config.jwt_access_secret as string, {
-    expiresIn: "1m",
+    expiresIn: "10m",
   });
   return {
     accessToken,
   };
 };
+const updateUserIntoDB = async (userEmail: string, payload: Partial<TUser>) => {
+  const user = await User.findOne({ email: userEmail });
+
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found!!");
+  }
+
+  const result = await User.findByIdAndUpdate(user?._id, payload, {
+    new: true,
+    runValidators: true,
+  });
+
+  return result;
+};
+const getMeIntoDB = async (userId: string) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found!!");
+  }
+  return user;
+};
+const delelteUserIntoDB = async (userId: string) => {
+  const user = await User.findOne({ _id: userId });
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found!!");
+  }
+  const result = await User.findByIdAndUpdate(
+    userId,
+    { isDeleted: true },
+    { new: true }
+  );
+  return result;
+};
+const makeAdminIntoDB = async (userId: string) => {
+  // check the user is exists or not
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+
+  const result = await User.findByIdAndUpdate(
+    userId,
+    { role: "admin" },
+    { new: true }
+  );
+  return result;
+};
+
 export const AuthService = {
   createSignUp,
   createSignIn,
   refreshTokenIntoDB,
+  getAllUserInDB,
+  updateUserIntoDB,
+  getMeIntoDB,
+  delelteUserIntoDB,
+  makeAdminIntoDB,
 };

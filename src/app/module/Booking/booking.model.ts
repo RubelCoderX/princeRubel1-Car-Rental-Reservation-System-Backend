@@ -1,40 +1,42 @@
 import { model, Schema } from "mongoose";
 import { TBooking } from "./booking.interface";
+import moment from "moment";
 
 const bookingSchema = new Schema<TBooking>(
   {
-    date: {
+    user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    car: { type: Schema.Types.ObjectId, ref: "Car", required: true },
+    pickUpDate: {
       type: String,
-      required: [true, "Date is required"],
+      required: true,
+      default: () => moment().format("DD-MM-YYYY"),
     },
-    startTime: {
+    dropOffDate: { type: String, default: "" },
+    totalCost: { type: Number, default: 0 },
+    status: {
       type: String,
-      required: [true, "Start Time is required"],
+      enum: ["pending", "ongoing", "complete"],
+      default: "pending",
     },
-    endTime: {
-      type: String,
-      default: null,
-    },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-    },
-    car: {
-      type: Schema.Types.ObjectId,
-      ref: "Car",
-      required: [true, "Car is required"],
-    },
-    totalCost: {
-      type: Number,
-      default: 0,
-    },
-    email: {
-      type: String,
-    },
+    identity: { type: String, required: true },
+    identityNo: { type: String, required: true },
+    drivingLicenseNo: { type: String, required: true },
+    isDeleted: { type: Boolean, default: false },
   },
   {
     timestamps: true,
   }
 );
+
+// Query Middleware
+bookingSchema.pre("find", function (next) {
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
+
+bookingSchema.pre("findOne", function (next) {
+  this.find({ isDeleted: { $ne: true } });
+  next();
+});
 
 export const Booking = model<TBooking>("Booking", bookingSchema);

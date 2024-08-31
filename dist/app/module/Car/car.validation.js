@@ -17,6 +17,7 @@ const carSchemaValidation = zod_1.z.object({
             .number()
             .positive("PricePerHour is required and must be positive"),
         status: zod_1.z.enum(["available", "unavailable"]).optional(),
+        carImgUrl: zod_1.z.string().min(1, { message: "Car Image URL must be required" }),
     }),
 });
 const updateCarSchema = zod_1.z.object({

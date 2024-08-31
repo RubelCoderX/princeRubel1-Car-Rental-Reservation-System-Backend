@@ -6,7 +6,7 @@ import jwt, { JwtPayload } from "jsonwebtoken";
 import config from "../config";
 import { TUserRole } from "../module/User/user.interface";
 
-const Auth = (requiredRole: TUserRole) => {
+const Auth = (...requiredRole: TUserRole[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     // check if the token send client
@@ -30,7 +30,7 @@ const Auth = (requiredRole: TUserRole) => {
         }
         const user = decoded as JwtPayload;
 
-        if (requiredRole && user.role !== requiredRole) {
+        if (requiredRole && !requiredRole.includes(user.role)) {
           res.status(httpStatus.UNAUTHORIZED).json({
             success: false,
             statusCode: httpStatus.UNAUTHORIZED,

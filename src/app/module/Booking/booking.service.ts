@@ -6,19 +6,21 @@ import { Booking } from "./booking.model";
 import { User } from "../User/user.model";
 import { JwtPayload } from "jsonwebtoken";
 import mongoose from "mongoose";
+import e from "express";
 
 const BookingCarFromDB = async (
   payload: Record<string, unknown>,
-  userData: JwtPayload
+  user: JwtPayload
 ) => {
-  const userInformation = await User.findOne({ email: userData.userEmail });
+  const userData = await User.findOne({ email: user.userEmail });
 
-  if (!userInformation) {
+  if (!userData) {
     throw new AppError(httpStatus.NOT_FOUND, " User not found!!");
   }
-  payload.car = payload.carId;
+  // payload.car = payload.carId;
+  payload.user = userData._id;
 
-  const carData = await Car.findById(payload.carId);
+  const carData = await Car.findById(payload?.car);
 
   // check if the car is exists
   if (!carData) {
@@ -28,7 +30,7 @@ const BookingCarFromDB = async (
   if (carData.status !== "available") {
     throw new AppError(httpStatus.BAD_REQUEST, "Car booking is not available");
   }
-  payload.user = userInformation._id;
+  payload.user = userData._id;
   const session = await mongoose.startSession();
   try {
     session.startTransaction();
@@ -81,9 +83,126 @@ const getMyBookingsFromDB = async (email: string) => {
 
   return bookings;
 };
+const updateBookeingFromDB = async (
+  user: JwtPayload,
+  payload: Record<string, unknown>,
+  bookingId: string
+) => {
+  // check the user is exists or not
+  const userData = await User.findOne({ email: user?.userEmail });
 
+  if (!userData) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found!");
+  }
+
+  //  check the booking using booking id and user id
+  const isCarBooked = await Booking.findOne({
+    user: userData?._id,
+    _id: bookingId,
+  });
+  if (!isCarBooked) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Booking not found!");
+  }
+
+  // if status is pending, user can update data
+  if (isCarBooked.status === "pending") {
+    const updateBooking = await Booking.findOneAndUpdate(
+      { _id: bookingId },
+      payload,
+      { new: true }
+    );
+    if (!updateBooking) {
+      throw new AppError(httpStatus.BAD_REQUEST, "Bad request");
+    }
+    return updateBooking;
+  } else {
+    throw new AppError(httpStatus.BAD_REQUEST, "Bad request");
+  }
+};
+
+const deleteBookingFromDB = async (user: JwtPayload, bookingId: string) => {
+  const session = await mongoose.startSession();
+
+  try {
+    session.startTransaction();
+
+    // Check if the user exists
+    const userData = await User.findOne({ email: user?.userEmail });
+    if (!userData) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found!");
+    }
+
+    const isCarBooked = await Booking.findById(bookingId);
+
+    if (!isCarBooked) {
+      throw new AppError(httpStatus.NOT_FOUND, "Booking not found!");
+    }
+    // Check the booking status before deletion
+    if (isCarBooked.status === "ongoing") {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "You can't delete the booking because it is ongoing."
+      );
+    }
+    // Only allow deletion if the booking status is pending
+    if (isCarBooked.status === "pending") {
+      const deleteBooking = await Booking.findOneAndUpdate(
+        { _id: bookingId },
+        { isDeleted: true },
+        { new: true, session }
+      );
+
+      // Update the car's isBooked status to false
+      await Car.findByIdAndUpdate(
+        isCarBooked.car,
+        { status: "available" },
+        { new: true, session }
+      );
+
+      await session.commitTransaction();
+      await session.endSession();
+
+      return deleteBooking;
+    } else {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Booking cannot be deleted unless it is pending."
+      );
+    }
+  } catch (err: any) {
+    await session.abortTransaction();
+    await session.endSession();
+    throw new AppError(httpStatus.BAD_REQUEST, "Failed to delete booking!");
+  }
+};
+
+const updateBookingStatus = async (user: JwtPayload, bookingId: string) => {
+  const userData = await User.findOne({ email: user.userEmail });
+  if (!userData) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found");
+  }
+  // check if the booking is exists
+  const isBookingExists = await Booking.findOne({
+    _id: bookingId,
+  });
+
+  if (!isBookingExists) {
+    throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
+  }
+  // if booking is status pending then only user can update the booking
+
+  const updateBooking = await Booking.findOneAndUpdate(
+    { _id: bookingId },
+    { status: "ongoing" },
+    { new: true }
+  );
+  return updateBooking;
+};
 export const BookingServices = {
   BookingCarFromDB,
   getAllBookingsFromDB,
   getMyBookingsFromDB,
+  updateBookeingFromDB,
+  deleteBookingFromDB,
+  updateBookingStatus,
 };

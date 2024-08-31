@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import httpStatus from "http-status";
 import AppError from "../../error/AppError";
-import { TCar } from "./car.interface";
+import { TCar, TSearchCriteria } from "./car.interface";
 import { Car } from "./car.model";
 import { Booking } from "../Booking/booking.model";
 import mongoose from "mongoose";
@@ -9,8 +10,40 @@ const createCarIntoDB = async (payload: TCar) => {
   const result = await Car.create(payload);
   return result;
 };
-const getAllCarsFromDB = async () => {
-  const result = await Car.find();
+const getAllCarsFromDB = async (
+  name: string,
+  carType: string,
+  location: string,
+  price: number
+) => {
+  let query: any = {
+    isDelete: { $ne: true },
+  };
+
+  if (name) {
+    const searchRegex = new RegExp(name, "i");
+    query = {
+      $or: [{ name: searchRegex }],
+    };
+  }
+  if (carType) {
+    const searchRegex = new RegExp(carType, "i");
+    query = {
+      $or: [{ carType: searchRegex }],
+    };
+  }
+
+  if (location) {
+    const searchRegex = new RegExp(location, "i");
+    query = {
+      $or: [{ location: searchRegex }],
+    };
+  }
+  if (price > 0) {
+    query.pricePerHour = { $lte: price };
+  }
+
+  const result = await Car.find(query);
   return result;
 };
 const getSingleCarFromDB = async (id: string) => {
@@ -87,6 +120,28 @@ const returnCarIntoDB = async (bookingId: string, endTime: string) => {
     throw new Error(error);
   }
 };
+// search car
+const searchCarsFromDB = async ({
+  features,
+  carType,
+  seats,
+}: TSearchCriteria) => {
+  const query: any = { status: "available" };
+
+  if (carType) {
+    query.carType = carType;
+  }
+  if (seats) {
+    query.maxSeats = seats;
+  }
+  if (features) {
+    query.features = { $in: [features] };
+  }
+
+  const result = await Car.find(query);
+
+  return result;
+};
 
 export const CarServices = {
   createCarIntoDB,
@@ -95,4 +150,5 @@ export const CarServices = {
   updateCarIntoDB,
   deleteCarFromDB,
   returnCarIntoDB,
+  searchCarsFromDB,
 };
