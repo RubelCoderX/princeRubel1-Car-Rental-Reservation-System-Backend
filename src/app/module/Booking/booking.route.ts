@@ -35,5 +35,10 @@ router.patch(
   Auth(USER_ROLE.admin),
   BookingControllers.updateBookingStatusFromDB
 );
+router.post(
+  "/complete-booking/:bookingId",
+  Auth(USER_ROLE.user),
+  BookingControllers.completeBookingFromDB
+);
 
 export const BookingRoutes = router;

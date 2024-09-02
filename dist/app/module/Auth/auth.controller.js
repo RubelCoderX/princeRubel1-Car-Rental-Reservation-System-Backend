@@ -93,7 +93,7 @@ const deleteFromDB = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, v
 }));
 const makeAdmin = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userId } = req.params;
-    const result = yield auth_service_1.AuthService.makeAdminIntoDB(userId);
+    const result = yield auth_service_1.AuthService.toggleAdminRoleInDB(userId);
     (0, sendResonse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,

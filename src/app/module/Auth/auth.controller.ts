@@ -91,7 +91,7 @@ const deleteFromDB = catchAsync(async (req, res) => {
 
 const makeAdmin = catchAsync(async (req, res) => {
   const { userId } = req.params;
-  const result = await AuthService.makeAdminIntoDB(userId);
+  const result = await AuthService.toggleAdminRoleInDB(userId);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

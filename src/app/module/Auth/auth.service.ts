@@ -125,19 +125,23 @@ const delelteUserIntoDB = async (userId: string) => {
   );
   return result;
 };
-const makeAdminIntoDB = async (userId: string) => {
-  // check the user is exists or not
+const toggleAdminRoleInDB = async (userId: string) => {
+  // Check if the user exists
   const user = await User.findById(userId);
   if (!user) {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  const result = await User.findByIdAndUpdate(
+  // Toggle the user's role between 'admin' and 'user'
+  const newRole = user.role === "admin" ? "user" : "admin";
+
+  const updatedUser = await User.findByIdAndUpdate(
     userId,
-    { role: "admin" },
+    { role: newRole },
     { new: true }
   );
-  return result;
+
+  return updatedUser;
 };
 
 export const AuthService = {
@@ -148,5 +152,5 @@ export const AuthService = {
   updateUserIntoDB,
   getMeIntoDB,
   delelteUserIntoDB,
-  makeAdminIntoDB,
+  toggleAdminRoleInDB,
 };

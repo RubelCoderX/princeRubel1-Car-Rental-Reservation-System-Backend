@@ -4,7 +4,10 @@ import AppError from "../../error/AppError";
 import { TCar, TSearchCriteria } from "./car.interface";
 import { Car } from "./car.model";
 import { Booking } from "../Booking/booking.model";
+import { JwtPayload } from "jsonwebtoken";
+import { User } from "../User/user.model";
 import mongoose from "mongoose";
+import { calculateTotalPrice } from "./car.utils";
 
 const createCarIntoDB = async (payload: TCar) => {
   const result = await Car.create(payload);
@@ -51,9 +54,28 @@ const getSingleCarFromDB = async (id: string) => {
   return result;
 };
 const updateCarIntoDB = async (id: string, payload: Partial<TCar>) => {
-  const result = await Car.findOneAndUpdate({ _id: id }, payload, {
+  const { vehicleSpecification, features, ...reemainingPayload } = payload;
+  const modifideUpdateData: Record<string, unknown> = {
+    ...reemainingPayload,
+  };
+  // console.log("modifideUpdateData", modifideUpdateData);
+  // for features
+  if (features && Object.keys(features).length) {
+    for (const [key, value] of Object.entries(features)) {
+      modifideUpdateData[`features.${key}`] = value;
+    }
+  }
+  // for vehicleSpecification
+  if (vehicleSpecification && Object.keys(vehicleSpecification).length) {
+    for (const [key, value] of Object.entries(vehicleSpecification)) {
+      modifideUpdateData[`vehicleSpecification.${key}`] = value;
+    }
+  }
+  const result = await Car.findOneAndUpdate({ _id: id }, modifideUpdateData, {
     new: true,
+    runValidators: true,
   });
+
   return result;
 };
 const deleteCarFromDB = async (id: string) => {
@@ -66,60 +88,63 @@ const deleteCarFromDB = async (id: string) => {
   );
   return result;
 };
-const returnCarIntoDB = async (bookingId: string, endTime: string) => {
-  const session = await mongoose.startSession();
-  try {
-    session.startTransaction();
-    const booking = await Booking.findById(bookingId);
 
+const returnCarIntoDB = async (bookingId: string, user: JwtPayload) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const userData = await User.findOne({ _id: user?.userId });
+    if (!userData) {
+      throw new AppError(httpStatus.NOT_FOUND, "User not found");
+    }
+    if (userData.role !== "admin") {
+      throw new AppError(httpStatus.UNAUTHORIZED, "Unauthorized access");
+    }
+    const booking = await Booking.findById(bookingId).session(session);
     if (!booking) {
       throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
     }
-
-    const car = await Car.findById(booking.car);
+    const car = await Car.findById(booking.car).session(session);
     if (!car) {
       throw new AppError(httpStatus.NOT_FOUND, "Car not Found!!");
     }
 
-    const startTime = booking.startTime;
-    const pricePerHour = car?.pricePerHour;
+    const { pickUpDate, pickTime } = booking;
+    const pricePerHour = car.pricePerHour;
 
-    // convert time to date
-    const sart = new Date(`${booking.date}T${startTime}`);
-    const end = new Date(`${booking.date}T${endTime}`);
-
-    // calculation hour
-    const duration = (end.getTime() - sart.getTime()) / (1000 * 60 * 60);
-    // calculate total cost
-    const totalCost = duration * pricePerHour;
-
-    // update car details
-    await Car.findOneAndUpdate(
-      { _id: car._id },
-      {
-        status: "available",
-      },
-      { new: true, session }
+    const { totalCost, dropOffDate, dropTime } = calculateTotalPrice(
+      pickUpDate,
+      pickTime,
+      pricePerHour
     );
-    // update booking details
-    const updateBooking = await Booking.findOneAndUpdate(
-      { _id: bookingId },
-      { endTime, totalCost },
-      { new: true, session }
-    )
+
+    // update booking status
+    booking.totalCost = totalCost;
+    booking.dropOffDate = dropOffDate;
+    booking.dropTime = dropTime;
+    booking.status = "completed";
+
+    await booking.save({ session });
+
+    // update cars status
+    car.status = "available";
+    await car.save({ session });
+
+    // Re-query the booking to populate the car field
+    const populatedBooking = await Booking.findById(bookingId)
       .populate("car")
-      .populate("user");
-
+      .populate("user")
+      .session(session);
     await session.commitTransaction();
-    await session.endSession();
-
-    return updateBooking;
+    session.endSession();
+    return populatedBooking;
   } catch (error: any) {
     await session.abortTransaction();
-    await session.endSession();
-    throw new Error(error);
+    session.endSession();
+    throw new AppError(httpStatus.INTERNAL_SERVER_ERROR, error.message);
   }
 };
+
 // search car
 const searchCarsFromDB = async ({
   features,

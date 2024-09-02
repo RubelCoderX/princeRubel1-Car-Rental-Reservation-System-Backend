@@ -8,6 +8,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -18,7 +29,9 @@ const http_status_1 = __importDefault(require("http-status"));
 const AppError_1 = __importDefault(require("../../error/AppError"));
 const car_model_1 = require("./car.model");
 const booking_model_1 = require("../Booking/booking.model");
+const user_model_1 = require("../User/user.model");
 const mongoose_1 = __importDefault(require("mongoose"));
+const car_utils_1 = require("./car.utils");
 const createCarIntoDB = (payload) => __awaiter(void 0, void 0, void 0, function* () {
     const result = yield car_model_1.Car.create(payload);
     return result;
@@ -56,8 +69,23 @@ const getSingleCarFromDB = (id) => __awaiter(void 0, void 0, void 0, function* (
     return result;
 });
 const updateCarIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    const result = yield car_model_1.Car.findOneAndUpdate({ _id: id }, payload, {
+    const { vehicleSpecification, features } = payload, reemainingPayload = __rest(payload, ["vehicleSpecification", "features"]);
+    const modifideUpdateData = Object.assign({}, reemainingPayload);
+    // for features
+    if (features && Object.keys(features).length) {
+        for (const [key, value] of Object.entries(features)) {
+            modifideUpdateData[`features.${key}`] = value;
+        }
+    }
+    // for vehicleSpecification
+    if (vehicleSpecification && Object.keys(vehicleSpecification).length) {
+        for (const [key, value] of Object.entries(vehicleSpecification)) {
+            modifideUpdateData[`vehicleSpecification.${key}`] = value;
+        }
+    }
+    const result = yield car_model_1.Car.findOneAndUpdate({ _id: id }, modifideUpdateData, {
         new: true,
+        runValidators: true,
     });
     return result;
 });
@@ -67,43 +95,50 @@ const deleteCarFromDB = (id) => __awaiter(void 0, void 0, void 0, function* () {
     });
     return result;
 });
-const returnCarIntoDB = (bookingId, endTime) => __awaiter(void 0, void 0, void 0, function* () {
+const returnCarIntoDB = (bookingId, user) => __awaiter(void 0, void 0, void 0, function* () {
     const session = yield mongoose_1.default.startSession();
+    session.startTransaction();
     try {
-        session.startTransaction();
-        const booking = yield booking_model_1.Booking.findById(bookingId);
+        const userData = yield user_model_1.User.findOne({ _id: user === null || user === void 0 ? void 0 : user.userId });
+        if (!userData) {
+            throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
+        }
+        if (userData.role !== "admin") {
+            throw new AppError_1.default(http_status_1.default.UNAUTHORIZED, "Unauthorized access");
+        }
+        const booking = yield booking_model_1.Booking.findById(bookingId).session(session);
         if (!booking) {
             throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Booking not found");
         }
-        const car = yield car_model_1.Car.findById(booking.car);
+        const car = yield car_model_1.Car.findById(booking.car).session(session);
         if (!car) {
             throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Car not Found!!");
         }
-        const startTime = booking.startTime;
-        const pricePerHour = car === null || car === void 0 ? void 0 : car.pricePerHour;
-        // convert time to date
-        const sart = new Date(`${booking.date}T${startTime}`);
-        const end = new Date(`${booking.date}T${endTime}`);
-        // calculation hour
-        const duration = (end.getTime() - sart.getTime()) / (1000 * 60 * 60);
-        // calculate total cost
-        const totalCost = duration * pricePerHour;
-        // update car details
-        yield car_model_1.Car.findOneAndUpdate({ _id: car._id }, {
-            status: "available",
-        }, { new: true, session });
-        // update booking details
-        const updateBooking = yield booking_model_1.Booking.findOneAndUpdate({ _id: bookingId }, { endTime, totalCost }, { new: true, session })
+        const { pickUpDate, pickTime } = booking;
+        const pricePerHour = car.pricePerHour;
+        const { totalCost, dropOffDate, dropTime } = (0, car_utils_1.calculateTotalPrice)(pickUpDate, pickTime, pricePerHour);
+        // update booking status
+        booking.totalCost = totalCost;
+        booking.dropOffDate = dropOffDate;
+        booking.dropTime = dropTime;
+        booking.status = "completed";
+        yield booking.save({ session });
+        // update cars status
+        car.status = "available";
+        yield car.save({ session });
+        // Re-query the booking to populate the car field
+        const populatedBooking = yield booking_model_1.Booking.findById(bookingId)
             .populate("car")
-            .populate("user");
+            .populate("user")
+            .session(session);
         yield session.commitTransaction();
-        yield session.endSession();
-        return updateBooking;
+        session.endSession();
+        return populatedBooking;
     }
     catch (error) {
         yield session.abortTransaction();
-        yield session.endSession();
-        throw new Error(error);
+        session.endSession();
+        throw new AppError_1.default(http_status_1.default.INTERNAL_SERVER_ERROR, error.message);
     }
 });
 // search car

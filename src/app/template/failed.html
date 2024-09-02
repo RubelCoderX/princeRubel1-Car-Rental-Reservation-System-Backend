@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Payment Failed</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 20px;
+        text-align: center;
+      }
+      h1 {
+        font-size: 2em;
+      }
+      p {
+        font-size: 1.2em;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+        padding: 20px;
+        background-color: #fff;
+      }
+      .btn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        color: #fff;
+        background-color: #dc3545;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .btn:hover {
+        background-color: #c82333;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Payment Failed</h1>
+      <p>{{message}}</p>
+      <p>Please check your payment details and try again.</p>
+      <script>
+        setTimeout(() => {
+          window.location.href = "http://localhost:5173/";
+        }, 3000);
+      </script>
+    </div>
+  </body>
+</html>

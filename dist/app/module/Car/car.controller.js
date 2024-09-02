@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CarControllers = void 0;
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const http_status_1 = __importDefault(require("http-status"));
 const catchAsync_1 = __importDefault(require("../../utils/catchAsync"));
 const sendResonse_1 = __importDefault(require("../../utils/sendResonse"));
@@ -74,8 +75,9 @@ const deleteCar = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void
     });
 }));
 const returnCar = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { bookingId, endTime } = req.body;
-    const result = yield car_service_1.CarServices.returnCarIntoDB(bookingId, endTime);
+    const { bookingId } = req.params;
+    const user = req.user;
+    const result = yield car_service_1.CarServices.returnCarIntoDB(bookingId, user);
     (0, sendResonse_1.default)(res, {
         success: true,
         statusCode: 200,
@@ -85,8 +87,12 @@ const returnCar = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void
 }));
 // search car
 const searchCars = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // console.log(req.body);
-    const result = yield car_service_1.CarServices.searchCarsFromDB(req.body);
+    const { features, seats, carType } = req.query;
+    const result = yield car_service_1.CarServices.searchCarsFromDB({
+        features,
+        carType,
+        seats,
+    });
     (0, sendResonse_1.default)(res, {
         statusCode: http_status_1.default.OK,
         success: true,

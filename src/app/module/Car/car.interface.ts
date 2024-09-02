@@ -10,11 +10,10 @@ export type TCar = {
   carImgUrl: string[];
   vehicleSpecification: string[];
   maxSeats: number;
-  ratings: number;
+  rating: number;
   gearType: string;
   fuelType: string;
   carType: string;
-  location: string;
 };
 export interface TSearchCriteria {
   carType: string;

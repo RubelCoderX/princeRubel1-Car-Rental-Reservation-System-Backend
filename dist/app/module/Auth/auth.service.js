@@ -92,7 +92,6 @@ const refreshTokenIntoDB = (token) => __awaiter(void 0, void 0, void 0, function
     };
 });
 const updateUserIntoDB = (userEmail, payload) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(payload);
     const user = yield user_model_1.User.findOne({ email: userEmail });
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found!!");
@@ -118,14 +117,16 @@ const delelteUserIntoDB = (userId) => __awaiter(void 0, void 0, void 0, function
     const result = yield user_model_1.User.findByIdAndUpdate(userId, { isDeleted: true }, { new: true });
     return result;
 });
-const makeAdminIntoDB = (userId) => __awaiter(void 0, void 0, void 0, function* () {
-    // check the user is exists or not
+const toggleAdminRoleInDB = (userId) => __awaiter(void 0, void 0, void 0, function* () {
+    // Check if the user exists
     const user = yield user_model_1.User.findById(userId);
     if (!user) {
         throw new AppError_1.default(http_status_1.default.NOT_FOUND, "User not found");
     }
-    const result = yield user_model_1.User.findByIdAndUpdate(userId, { role: "admin" }, { new: true });
-    return result;
+    // Toggle the user's role between 'admin' and 'user'
+    const newRole = user.role === "admin" ? "user" : "admin";
+    const updatedUser = yield user_model_1.User.findByIdAndUpdate(userId, { role: newRole }, { new: true });
+    return updatedUser;
 });
 exports.AuthService = {
     createSignUp,
@@ -135,5 +136,5 @@ exports.AuthService = {
     updateUserIntoDB,
     getMeIntoDB,
     delelteUserIntoDB,
-    makeAdminIntoDB,
+    toggleAdminRoleInDB,
 };

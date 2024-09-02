@@ -54,34 +54,12 @@ const userSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
+// hashed the password field
 userSchema.pre("save", function (next) {
     return __awaiter(this, void 0, void 0, function* () {
-        const user = this;
-        // Validate that password and confirmPassword match
-        if (user.isModified("password") && user.confirmPassword) {
-            if (user.password !== user.confirmPassword) {
-                throw new Error("Passwords do not match");
-            }
-        }
-        // Hash the password if it has been modified (or is new)
-        if (user.isModified("password")) {
-            user.password = yield bcrypt_1.default.hash(user.password, Number(config_1.default.bcrypt_salt_rounds));
-        }
+        this.password = yield bcrypt_1.default.hash(this.password, Number(config_1.default.bcrypt_salt_rounds));
         next();
     });
-});
-// set '' after saving password
-userSchema.post("save", function (doc, next) {
-    return __awaiter(this, void 0, void 0, function* () {
-        doc.password = "";
-        next();
-    });
-});
-userSchema.set("toJSON", {
-    transform: function (doc, ret) {
-        delete ret.password;
-        return ret;
-    },
 });
 // Static method to check if a user exists by
 userSchema.statics.isUserExitsByEmail = function (email) {

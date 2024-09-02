@@ -7,13 +7,27 @@ import { USER_ROLE } from "../User/user.constant";
 
 const router = express.Router();
 
+router.put(
+  "/:id",
+  // Auth(USER_ROLE.admin),
+  (req, res, next) => {
+    console.log(req.body);
+    next();
+  },
+  validateRequest(CarValidation.updateCarSchema),
+  CarControllers.updateCar
+);
 // search cars
 router.get(
   "/search-cars",
-  Auth(USER_ROLE.user, USER_ROLE.admin),
+  // Auth(USER_ROLE.user, USER_ROLE.admin),
   CarControllers.searchCars
 );
-router.put("/return", Auth(USER_ROLE.admin), CarControllers.returnCar);
+router.put(
+  "/return-car/:bookingId",
+  Auth(USER_ROLE.admin),
+  CarControllers.returnCar
+);
 router.post(
   "/",
   Auth(USER_ROLE.admin),
@@ -22,11 +36,6 @@ router.post(
 );
 router.get("/", CarControllers.getAllCars);
 router.get("/:id", CarControllers.getSingleCar);
-router.put(
-  "/:id",
-  validateRequest(CarValidation.updateCarSchema),
-  CarControllers.updateCar
-);
 
 router.delete("/:id", CarControllers.deleteCar);
 

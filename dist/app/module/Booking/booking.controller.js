@@ -62,8 +62,57 @@ const getMyBookings = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, 
             data: result,
         });
 }));
+const updateBooking = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const data = req.body;
+    const { bookingId } = req.params;
+    const result = yield booking_service_1.BookingServices.updateBookeingFromDB(user, data, bookingId);
+    (0, sendResonse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Booking updated successfully!",
+        data: result,
+    });
+}));
+const deletedBooking = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const { bookingId } = req.params;
+    const result = yield booking_service_1.BookingServices.deleteBookingFromDB(user, bookingId);
+    (0, sendResonse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Booking deleted successfully!",
+        data: result,
+    });
+}));
+const updateBookingStatusFromDB = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const { bookingId } = req.params;
+    const result = yield booking_service_1.BookingServices.updateBookingStatus(user, bookingId);
+    (0, sendResonse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Booking status updated successfully!",
+        data: result,
+    });
+}));
+const completeBookingFromDB = (0, catchAsync_1.default)((req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = req.user;
+    const { bookingId } = req.params;
+    const result = yield booking_service_1.BookingServices.completedBooking(user, bookingId);
+    (0, sendResonse_1.default)(res, {
+        success: true,
+        statusCode: http_status_1.default.OK,
+        message: "Booking completed successfully!",
+        data: result,
+    });
+}));
 exports.BookingControllers = {
     createBooking,
     getAllBookings,
     getMyBookings,
+    updateBooking,
+    deletedBooking,
+    updateBookingStatusFromDB,
+    completeBookingFromDB,
 };

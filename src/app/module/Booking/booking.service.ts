@@ -6,7 +6,8 @@ import { Booking } from "./booking.model";
 import { User } from "../User/user.model";
 import { JwtPayload } from "jsonwebtoken";
 import mongoose from "mongoose";
-import e from "express";
+import { v4 as uuidv4 } from "uuid";
+import { paymentGatway } from "../../utils/paymentGatway";
 
 const BookingCarFromDB = async (
   payload: Record<string, unknown>,
@@ -145,7 +146,10 @@ const deleteBookingFromDB = async (user: JwtPayload, bookingId: string) => {
       );
     }
     // Only allow deletion if the booking status is pending
-    if (isCarBooked.status === "pending") {
+    if (
+      isCarBooked.status === "pending" ||
+      isCarBooked.status === "completed"
+    ) {
       const deleteBooking = await Booking.findOneAndUpdate(
         { _id: bookingId },
         { isDeleted: true },
@@ -198,6 +202,40 @@ const updateBookingStatus = async (user: JwtPayload, bookingId: string) => {
   );
   return updateBooking;
 };
+
+const completedBooking = async (user: JwtPayload, bookingId: string) => {
+  // check the user is exists or not
+  const userData = await User.findOne({ email: user?.userEmail });
+  if (!userData) {
+    throw new AppError(httpStatus.NOT_FOUND, "User not found!");
+  }
+  // check the booking using booking id and user id
+  const isCarBooked = await Booking.findById(bookingId);
+  if (!isCarBooked) {
+    throw new AppError(httpStatus.BAD_REQUEST, "Booking not found!");
+  }
+  // car is exists or not
+  const carData = await Car.findById(isCarBooked.car);
+  if (!carData) {
+    throw new AppError(httpStatus.NOT_FOUND, "Car not found!!");
+  }
+  const transactionId = uuidv4();
+  // handle payment
+  const paymentDetails = {
+    transactionId,
+    customerName: userData?.name,
+    customerEmail: userData?.email,
+    customerPhone: userData?.phone,
+    customerAddress: userData?.address,
+    totalCost: isCarBooked?.totalCost,
+    bookingId: isCarBooked?._id,
+    currency: "BDT",
+  };
+  const paymentSession = await paymentGatway(paymentDetails);
+
+  return paymentSession;
+};
+
 export const BookingServices = {
   BookingCarFromDB,
   getAllBookingsFromDB,
@@ -205,4 +243,5 @@ export const BookingServices = {
   updateBookeingFromDB,
   deleteBookingFromDB,
   updateBookingStatus,
+  completedBooking,
 };

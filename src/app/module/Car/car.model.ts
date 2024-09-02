@@ -48,7 +48,7 @@ const carSchema = new Schema<TCar>(
       type: Number,
       required: [true, "Max seats are required"],
     },
-    ratings: {
+    rating: {
       type: Number,
       default: 0,
     },
@@ -63,10 +63,6 @@ const carSchema = new Schema<TCar>(
     carType: {
       type: String,
       required: [true, "Car type is required"],
-    },
-    location: {
-      type: String,
-      required: [true, "Location is required"],
     },
   },
   {
