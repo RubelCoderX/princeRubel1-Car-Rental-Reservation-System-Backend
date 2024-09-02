@@ -11,16 +11,21 @@ const feedBackSchema = new mongoose_1.Schema({
         type: String,
         required: [true, "Name is required"],
     },
-    email: {
-        type: String,
-        required: [true, "Email is required"],
-    },
     message: {
         type: String,
         required: [true, "Message is required"],
     },
+    rating: {
+        type: Number,
+        required: [true, "Rating is required"],
+    },
+    profile: {
+        type: String,
+        required: [true, "Profile is required"],
+    },
     date: {
         type: String,
+        required: true,
         default: () => (0, moment_1.default)().format("DD-MM-YYYY"),
     },
 });

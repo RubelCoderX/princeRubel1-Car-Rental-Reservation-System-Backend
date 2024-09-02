@@ -2,8 +2,6 @@ import { join } from "path";
 import { readFile } from "fs/promises";
 import { Booking } from "../Booking/booking.model";
 import { verifyPayment } from "../../utils/paymentGatway";
-import AppError from "../../error/AppError";
-import httpStatus from "http-status";
 
 export const confirmationService = async (
   transactionId: string,
@@ -12,13 +10,10 @@ export const confirmationService = async (
 ) => {
   try {
     const verifyResponse = await verifyPayment(transactionId);
-
-    const bookingCar = await Booking.findById(bookingId);
-
-    if (!bookingCar) {
-      throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
-    }
-
+    // const bookingCar = await Booking.findById(bookingId);
+    // if (!bookingCar) {
+    //   throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
+    // }
     let message = "";
     if (verifyResponse && verifyResponse.pay_status === "Successful") {
       await Booking.findOneAndUpdate(

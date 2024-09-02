@@ -14,7 +14,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      // "https://car-rental-reservation-client.vercel.app",
+      "https://car-rental-reservation-client.vercel.app",
     ],
     credentials: true,
   })

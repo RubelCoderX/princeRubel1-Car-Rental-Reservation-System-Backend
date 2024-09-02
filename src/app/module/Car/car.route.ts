@@ -9,11 +9,7 @@ const router = express.Router();
 
 router.put(
   "/:id",
-  // Auth(USER_ROLE.admin),
-  (req, res, next) => {
-    console.log(req.body);
-    next();
-  },
+  Auth(USER_ROLE.admin),
   validateRequest(CarValidation.updateCarSchema),
   CarControllers.updateCar
 );

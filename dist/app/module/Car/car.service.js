@@ -71,6 +71,7 @@ const getSingleCarFromDB = (id) => __awaiter(void 0, void 0, void 0, function* (
 const updateCarIntoDB = (id, payload) => __awaiter(void 0, void 0, void 0, function* () {
     const { vehicleSpecification, features } = payload, reemainingPayload = __rest(payload, ["vehicleSpecification", "features"]);
     const modifideUpdateData = Object.assign({}, reemainingPayload);
+    // console.log("modifideUpdateData", modifideUpdateData);
     // for features
     if (features && Object.keys(features).length) {
         for (const [key, value] of Object.entries(features)) {

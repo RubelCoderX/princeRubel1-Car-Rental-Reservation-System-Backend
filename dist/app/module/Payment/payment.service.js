@@ -8,24 +8,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.confirmationService = void 0;
 const path_1 = require("path");
 const promises_1 = require("fs/promises");
 const booking_model_1 = require("../Booking/booking.model");
 const paymentGatway_1 = require("../../utils/paymentGatway");
-const AppError_1 = __importDefault(require("../../error/AppError"));
-const http_status_1 = __importDefault(require("http-status"));
 const confirmationService = (transactionId, status, bookingId) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const verifyResponse = yield (0, paymentGatway_1.verifyPayment)(transactionId);
-        const bookingCar = yield booking_model_1.Booking.findById(bookingId);
-        if (!bookingCar) {
-            throw new AppError_1.default(http_status_1.default.NOT_FOUND, "Booking not found");
-        }
+        // const bookingCar = await Booking.findById(bookingId);
+        // if (!bookingCar) {
+        //   throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
+        // }
         let message = "";
         if (verifyResponse && verifyResponse.pay_status === "Successful") {
             yield booking_model_1.Booking.findOneAndUpdate({ _id: bookingId }, {
